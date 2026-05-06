@@ -1,0 +1,12 @@
+name: pv-addon-megaphone
+version: '0.0.1'
+main: ru.ynovka.pvAddonMegaphone.PvAddonMegaphone
+api-version: '1.21'
+prefix: [ pv-addon-megaphone ]
+authors: [ Ynovka ]
+website: ynovka.ru
+dependencies:
+  server:
+    PlasmoVoice:
+      required: true
+      load: BEFORE
