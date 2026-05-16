@@ -3,7 +3,6 @@ package ru.ynovka.pvAddonMegaphone
 import su.plo.voice.api.audio.codec.CodecException
 import su.plo.voice.api.server.PlasmoVoiceServer
 import su.plo.voice.api.encryption.EncryptionException
-import su.plo.voice.api.codec.CodecException
 import kotlin.math.abs
 
 class MegaphoneCodec(
