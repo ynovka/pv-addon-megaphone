@@ -26,8 +26,12 @@ class MegaphoneRouter(
         if (!shouldUseMegaphone(player) || event.activation != addon.proximityActivation) return
 
         sources.computeIfAbsent(player.instance.uuid) {
-            createMegaphoneSource(player)
+            addon.megaphoneLine.createPlayerSource(player, true).apply {
+                setName(player.instance.name)
+                filters.firstOrNull()?.let(::removeFilter)
+            }
         }
+
     }
 
     @EventSubscribe(priority = EventPriority.LOWEST, ignoreCancelled = false)
@@ -36,7 +40,9 @@ class MegaphoneRouter(
         if (!shouldUseMegaphone(player) || event.activation != addon.proximityActivation) return
 
         val source = sources.computeIfAbsent(player.instance.uuid) {
-            createMegaphoneSource(player)
+            addon.megaphoneLine.createPlayerSource(player, false).apply {
+                filters.firstOrNull()?.let(::removeFilter)
+            }
         }
 
         val distance: Short = 92
@@ -48,7 +54,7 @@ class MegaphoneRouter(
 
         processedFrame?.let {
             source.sendAudioFrame(
-                it,
+                processedFrame,
                 event.packet.sequenceNumber,
                 distance,
                 PlayerActivationInfo(event.player, event.packet)
@@ -72,16 +78,6 @@ class MegaphoneRouter(
 
         codecs.remove(player.instance.uuid)?.close()
         event.result = ServerActivation.Result.HANDLED
-    }
-
-    private fun createMegaphoneSource(player: VoiceServerPlayer): ServerPlayerSource {
-        return addon.megaphoneLine.createPlayerSource(player, false).apply {
-            setName(player.instance.name)
-
-            filters.firstOrNull()?.let { filter ->
-                removeFilter(filter)
-            }
-        }
     }
 
     private fun shouldUseMegaphone(player: VoiceServerPlayer): Boolean {
