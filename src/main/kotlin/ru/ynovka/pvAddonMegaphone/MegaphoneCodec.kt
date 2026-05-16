@@ -3,7 +3,6 @@ package ru.ynovka.pvAddonMegaphone
 import su.plo.voice.api.audio.codec.CodecException
 import su.plo.voice.api.server.PlasmoVoiceServer
 import su.plo.voice.api.encryption.EncryptionException
-import kotlin.math.abs
 
 class MegaphoneCodec(
     voiceServer: PlasmoVoiceServer
@@ -46,9 +45,6 @@ class MegaphoneCodec(
     private var hpPrevOut = 0.0
     private var lpPrevOut = 0.0
 
-    private var noisePhase = 0
-    private var noiseState = 0x12345678
-
     private fun distort(input: ShortArray): ShortArray {
         val out = ShortArray(input.size)
         var held = 0
@@ -67,43 +63,17 @@ class MegaphoneCodec(
                 held = x.toInt()
             }
 
-            var sample = (held * 1.15).toInt()
-            sample = sample.coerceIn(-15000, 15000)
+            var sample = (held * 1.15 * 1.25).toInt()
+            sample = sample.coerceIn(-18000, 18000)
             sample = (sample / 192) * 192
 
             x = sample.toDouble()
-
-            val noise = nextNoise() * 1260.0
-
-            noisePhase++
-
-            val pulsePeriod = 504
-            val pulsePos = noisePhase % pulsePeriod
-
-            val pulse = if (pulsePos < pulsePeriod / 2) {
-                1.0
-            } else {
-                0.15
-            }
-
-            val voiceGate = (abs(input[i].toDouble()) / 6000.0)
-                .coerceIn(0.0, 1.0)
-
-            x += noise * pulse * (0.25 + voiceGate)
-            x = x.coerceIn(-14000.0, 14000.0)
+            x = x.coerceIn(-18000.0, 18000.0)
 
             out[i] = x.toInt().toShort()
         }
 
         return out
-    }
-
-    private fun nextNoise(): Double {
-        noiseState = noiseState xor (noiseState shl 13)
-        noiseState = noiseState xor (noiseState ushr 17)
-        noiseState = noiseState xor (noiseState shl 5)
-
-        return ((noiseState and 0xFFFF) / 32768.0) - 1.0
     }
 
     @Synchronized
