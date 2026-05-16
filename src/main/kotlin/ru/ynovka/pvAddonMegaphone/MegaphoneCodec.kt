@@ -1,8 +1,10 @@
 package ru.ynovka.pvAddonMegaphone
 
+import su.plo.voice.api.audio.codec.CodecException
 import su.plo.voice.api.server.PlasmoVoiceServer
+import su.plo.voice.api.encryption.EncryptionException
+import su.plo.voice.api.codec.CodecException
 import kotlin.math.abs
-
 
 class MegaphoneCodec(
     voiceServer: PlasmoVoiceServer
@@ -12,11 +14,33 @@ class MegaphoneCodec(
     private val encoder = voiceServer.createOpusEncoder(false)
     private val encryption = voiceServer.defaultEncryption
 
-    fun process(encryptedFrame: ByteArray): ByteArray {
-        val decoded = decoder.decode(encryption.decrypt(encryptedFrame))
-        val distorted = distort(decoded)
-        val encoded = encoder.encode(distorted)
-        return encryption.encrypt(encoded)
+    @Synchronized
+    fun process(encryptedFrame: ByteArray): ByteArray? {
+        return try {
+            val decrypted = encryption.decrypt(encryptedFrame)
+            val decoded = decoder.decode(decrypted)
+
+            if (decoded.size != 960) {
+                return null
+            }
+
+            val distorted = distort(decoded)
+
+            if (distorted.size != 960) {
+                return null
+            }
+
+            val encoded = encoder.encode(distorted)
+            encryption.encrypt(encoded)
+        } catch (e: CodecException) {
+            null
+        } catch (e: EncryptionException) {
+            null
+        } catch (e: IllegalArgumentException) {
+            null
+        } catch (e: IllegalStateException) {
+            null
+        }
     }
 
     private var hpPrevIn = 0.0
@@ -67,7 +91,6 @@ class MegaphoneCodec(
                 .coerceIn(0.0, 1.0)
 
             x += noise * pulse * (0.25 + voiceGate)
-
             x = x.coerceIn(-14000.0, 14000.0)
 
             out[i] = x.toInt().toShort()
@@ -84,6 +107,7 @@ class MegaphoneCodec(
         return ((noiseState and 0xFFFF) / 32768.0) - 1.0
     }
 
+    @Synchronized
     override fun close() {
         decoder.close()
         encoder.close()
