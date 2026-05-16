@@ -48,14 +48,16 @@ class MegaphoneRouter(
             .computeIfAbsent(player.instance.uuid) { MegaphoneCodec(addon.voiceServer) }
             .process(rawFrame)
 
-        source.sendAudioFrame(
-            processedFrame,
-            event.packet.sequenceNumber,
-            distance,
-            PlayerActivationInfo(event.player, event.packet)
-        )
+        processedFrame?.let {
+            source.sendAudioFrame(
+                processedFrame,
+                event.packet.sequenceNumber,
+                distance,
+                PlayerActivationInfo(event.player, event.packet)
+            )
 
-        event.result = ServerActivation.Result.HANDLED
+            event.result = ServerActivation.Result.HANDLED
+        }
     }
 
     @EventSubscribe(priority = EventPriority.LOWEST, ignoreCancelled = false)
