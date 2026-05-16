@@ -13,15 +13,15 @@ repositories {
 }
 
 dependencies {
-    compileOnly("dev.folia:folia-api:26.1.2.build.8-stable")
+    compileOnly("dev.folia:folia-api:1.21.11-R0.1-SNAPSHOT")
 
-    compileOnly("su.plo.voice.server:paper:2.1.9")
+    compileOnly("su.plo.voice.server:paper:2.1.7")
 
     implementation(kotlin("stdlib"))
 }
 
 kotlin {
-    jvmToolchain(25)
+    jvmToolchain(21)
 }
 
 tasks.build {
